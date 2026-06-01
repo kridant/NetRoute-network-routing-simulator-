@@ -2,6 +2,7 @@
 #include "Graph.h"
 #include "Dijkstra.h"
 #include "Visualizer.h"
+#include <cmath>
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(900, 650), "NetRoute - Network Routing Simulator");
@@ -28,18 +29,55 @@ int main() {
 
     Visualizer viz(window);
 
-    // Find shortest path from R-A (0) to R-F (5)
-    std::vector<int> path = Dijkstra::findPath(graph, 0, 5);
+    int src = -1, dest = -1;
+    std::vector<int> path;
 
     while (window.isOpen()) {
         sf::Event event;
-        while (window.pollEvent(event))
+        while (window.pollEvent(event)) {
+
             if (event.type == sf::Event::Closed)
                 window.close();
+
+            // Handle mouse click
+            if (event.type == sf::Event::MouseButtonPressed &&
+                event.mouseButton.button == sf::Mouse::Left) {
+
+                float mx = event.mouseButton.x;
+                float my = event.mouseButton.y;
+
+                // Check if click is near any node
+                for (int i = 0; i < graph.nodeCount(); i++) {
+                    float dx = graph.nodes[i].x - mx;
+                    float dy = graph.nodes[i].y - my;
+                    float dist = std::sqrt(dx*dx + dy*dy);
+
+                    if (dist < 25) {  // clicked within node radius
+                        if (src == -1) {
+                            // First click — set source
+                            src = i;
+                            path.clear();
+                        } else if (dest == -1 && i != src) {
+                            // Second click — set destination, run Dijkstra
+                            dest = i;
+                            path = Dijkstra::findPath(graph, src, dest);
+                        } else {
+                            // Third click — reset
+                            src = i;
+                            dest = -1;
+                            path.clear();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
 
         window.clear(sf::Color(20, 20, 30));
         viz.drawGraph(graph);
         viz.drawPath(graph, path);
+        viz.drawSelection(graph, src, dest);
+        viz.drawInfo(graph, path, src, dest);
         window.display();
     }
 

@@ -9,6 +9,8 @@ public:
 
     void drawGraph(const Graph& graph);
     void drawPath(const Graph& graph, const std::vector<int>& path);
+    void drawSelection(const Graph& graph, int src, int dest);
+    void drawInfo(const Graph& graph, const std::vector<int>& path, int src, int dest);
 
 private:
     sf::RenderWindow& window;

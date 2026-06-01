@@ -99,3 +99,54 @@ void Visualizer::drawPath(const Graph& graph, const std::vector<int>& path) {
     for (int idx : path)
         drawNode(graph.nodes[idx], sf::Color(255, 140, 0));
 }
+
+void Visualizer::drawSelection(const Graph& graph, int src, int dest) {
+    if (src != -1 && isValidIndex(graph, src))
+        drawNode(graph.nodes[src], sf::Color(0, 200, 0));
+    if (dest != -1 && isValidIndex(graph, dest))
+        drawNode(graph.nodes[dest], sf::Color(200, 0, 0));
+}
+
+void Visualizer::drawInfo(const Graph& graph, const std::vector<int>& path, int src, int dest) {
+    if (!fontLoaded)
+        return;
+
+    sf::Text info;
+    info.setFont(font);
+    info.setCharacterSize(16);
+    info.setFillColor(sf::Color::White);
+    info.setPosition(20, 10);
+
+    if (src == -1) {
+        info.setString("Click a router to select SOURCE");
+    } else if (dest == -1 && isValidIndex(graph, src)) {
+        info.setString("Source: " + graph.nodes[src].name + "  |  Now click DESTINATION");
+    } else if (path.empty() && isValidIndex(graph, src) && isValidIndex(graph, dest)) {
+        info.setString("No path found between " + graph.nodes[src].name +
+                       " and " + graph.nodes[dest].name);
+    } else if (!path.empty()) {
+        int totalCost = 0;
+        for (int i = 0; i < static_cast<int>(path.size()) - 1; i++) {
+            if (!isValidIndex(graph, path[i]) || !isValidIndex(graph, path[i + 1]))
+                return;
+            for (const Edge& e : graph.adjList[path[i]]) {
+                if (e.to == path[i + 1]) {
+                    totalCost += e.weight;
+                    break;
+                }
+            }
+        }
+
+        std::string pathStr;
+        for (int i = 0; i < static_cast<int>(path.size()); i++) {
+            if (!isValidIndex(graph, path[i]))
+                return;
+            pathStr += graph.nodes[path[i]].name;
+            if (i < static_cast<int>(path.size()) - 1)
+                pathStr += " → ";
+        }
+        info.setString("Path: " + pathStr + "  |  Cost: " + std::to_string(totalCost) + "ms");
+    }
+
+    window.draw(info);
+}
